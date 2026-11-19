@@ -4,8 +4,7 @@ module QK_matmul #(
   parameter LANES = 8,
   parameter QUERY_FILE = "",
   parameter KEY_FILE = ""
-)
-(
+) (
   input wire clk,
   input wire rst,
 

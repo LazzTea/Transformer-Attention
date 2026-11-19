@@ -29,11 +29,14 @@ reg [$clog2(N)-1:0] i = 0;
 reg [$clog2(N)-1:0] g = 0;
 reg [$clog2(D)-1:0] k = 0;
 
-reg [8*LANES-1:0] V [0:D*GROUPS-1];
+reg [D-1:0]   V [0:N-1];
+reg [D*8-1:0] v [0:LANES-1];
 
-reg [8*LANES-1:0] v;
+reg [D*SW-1:0] pv [0:LANES-1];
 
-reg [31:0] p_sum = 0;
+reg [31:0] p_sum [0:7]= 0;
+
+reg [SW:0]
 
 initial begin
   $readmemh(VALUE_FILE, V);
@@ -41,27 +44,25 @@ end
 
 reg running = 0;
 
-reg first_d = 0;
-reg last_d = 0;
-reg vld_d = 0;
-
+integer i;
 integer b;
 
 always @(posedge clk or posedge rst) begin
   if (rst) begin
-    i <= 0;
-    g <= 0;
-    k <= 0;
-
-    vld_d <= 0;
-    running <= 0;
-    done <= 0;
-  end else begin
+  end 
+  
+  else begin
     if (ready) begin
-      // Step 2: Load Data
-      v <= V[k*GROUPS + g];
+      // Load Data
+      for (i = 0; i < 8; i = i + 1) begin
+        v[i] <= V[p_col[i]];
+      end
 
-      // Step 3: Multiply & Store PV
+      if (!first) begin
+        for (i = 0; i < 64; i = i + 1) begin
+          o_acc[i] <= pv[0][SW:0] + 
+        end
+      end
     end
   end
 end
@@ -71,13 +72,11 @@ generate
   for (l = 0; l < LANES; l = l + 1) begin : lane
     pv_lane #(.SW(SW)) u_lane (
       .clk(clk),
-      .rst(rst),
 
-      .p(p),
-      .v(v[8*l +: 8]),
+      .p(p[l]),
+      .v(v[l]),
 
-      .pv(o_acc[SW*l +: SW]),
-      .valid(p_valid[l])
+      .pv(pv[l])
     );
   end
 endgenerate
